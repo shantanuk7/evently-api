@@ -1,6 +1,8 @@
 package com.springproject.eventmanagementsystem.controller;
 
 import com.springproject.eventmanagementsystem.config.SecurityConfig;
+import com.springproject.eventmanagementsystem.dto.AuthLoginRequest;
+import com.springproject.eventmanagementsystem.dto.AuthLoginResponse;
 import com.springproject.eventmanagementsystem.dto.AuthRegistrationRequest;
 import com.springproject.eventmanagementsystem.dto.AuthRegistrationResponse;
 import com.springproject.eventmanagementsystem.model.Role;
@@ -15,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import tools.jackson.databind.ObjectMapper;
 
 import static org.mockito.Mockito.*;
@@ -61,5 +64,23 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.name").value("Rahul"))
                 .andExpect(jsonPath("$.email").value("rahul.attendee@gmail.com"))
                 .andExpect(jsonPath("$.role").value("ATTENDEE"));
+    }
+
+    @Test
+    void shouldReturnTokenAndUserDetails_whenUserIsSuccessfullyLoggedIn() throws Exception {
+        AuthLoginRequest request = new AuthLoginRequest("rahul.attendee@gmail.com", "Test@123");
+        AuthLoginResponse mockResponse = new AuthLoginResponse("token", 1L, "rahul.attendee@gmail.com", Role.ATTENDEE);
+
+        when(authService.login(any(AuthLoginRequest.class))).thenReturn(mockResponse);
+
+        ResultActions results = mockMvc.perform(
+                post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.token").value("token"))
+                .andExpect(jsonPath("$.data.userId").value(1L))
+                .andExpect(jsonPath("$.data.email").value("rahul.attendee@gmail.com"))
+                .andExpect(jsonPath("$.data.role").value("ATTENDEE"));
     }
 }

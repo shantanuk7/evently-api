@@ -1,7 +1,10 @@
 package com.springproject.eventmanagementsystem.controller;
 
+import com.springproject.eventmanagementsystem.dto.AuthLoginRequest;
+import com.springproject.eventmanagementsystem.dto.AuthLoginResponse;
 import com.springproject.eventmanagementsystem.dto.AuthRegistrationRequest;
 import com.springproject.eventmanagementsystem.dto.AuthRegistrationResponse;
+import com.springproject.eventmanagementsystem.response.SuccessResponse;
 import com.springproject.eventmanagementsystem.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -28,5 +31,15 @@ public class AuthController {
         AuthRegistrationResponse response = authService.registerUser(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<SuccessResponse<AuthLoginResponse>> login(
+            @Valid @RequestBody AuthLoginRequest request) {
+
+        AuthLoginResponse response = authService.login(request);
+        return ResponseEntity.status(HttpStatus.OK).body(
+                SuccessResponse.success("Login successful",response)
+        );
     }
 }
