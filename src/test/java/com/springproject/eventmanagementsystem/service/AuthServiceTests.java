@@ -35,16 +35,6 @@ public class AuthServiceTests {
     @InjectMocks
     private AuthService authService;
 
-    @BeforeEach
-    void setup() {
-        UserEntity mockAttendee = new UserEntity();
-        mockAttendee.setId(1L);
-        mockAttendee.setName("Rahul");
-        mockAttendee.setEmail("rahul.attendee@gmail.com");
-        mockAttendee.setPassword("Test@123");
-        mockAttendee.setRole(Role.ATTENDEE);
-    }
-
     @Test
     void shouldSaveCorrectUserDetails_WhenNewUserIsRegistered() {
 
@@ -60,6 +50,7 @@ public class AuthServiceTests {
         savedUser.setEmail("rahul.attendee@gmail.com");
         savedUser.setRole(Role.ATTENDEE);
 
+        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.empty());
         when(userRepository.save(any(UserEntity.class))).thenReturn(savedUser);
 
         // When
