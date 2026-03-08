@@ -24,14 +24,15 @@ public class AuthService {
     }
 
     public AuthRegistrationResponse registerUser(AuthRegistrationRequest request){
-        Optional<UserEntity> user = userRepository.findByEmail(request.getEmail().toLowerCase().trim());
+        String normalizedEmail = request.getEmail().trim().toLowerCase();
+        Optional<UserEntity> user = userRepository.findByEmail(normalizedEmail);
         if (user.isPresent()) {
             throw new ConflictException("CONFLICT_ERROR", "User with email:"+request.getEmail()+" already exists");
         }
 
         UserEntity newUser = new UserEntity();
         newUser.setName(request.getName());
-        newUser.setEmail(request.getEmail().toLowerCase());
+        newUser.setEmail(normalizedEmail);
         newUser.setPassword(passwordEncoder.encode(request.getPassword()));
         newUser.setRole(Role.ATTENDEE);
 
