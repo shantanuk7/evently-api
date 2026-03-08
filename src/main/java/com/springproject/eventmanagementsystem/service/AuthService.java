@@ -55,15 +55,16 @@ public class AuthService {
     }
 
     public AuthLoginResponse login(AuthLoginRequest request) {
+        String normalizedEmail = request.getEmail().trim().toLowerCase();
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
+                        normalizedEmail,
                         request.getPassword()
                 )
         );
 
-        UserEntity user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND","user not found with email "+ request.getEmail()));
+        UserEntity user = userRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND","user not found with email "+ normalizedEmail));
 
         String token = jwtService.generateToken(user);
 
