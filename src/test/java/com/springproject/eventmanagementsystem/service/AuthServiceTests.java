@@ -2,6 +2,7 @@ package com.springproject.eventmanagementsystem.service;
 
 import com.springproject.eventmanagementsystem.dto.AuthRegistrationRequest;
 import com.springproject.eventmanagementsystem.dto.AuthRegistrationResponse;
+import com.springproject.eventmanagementsystem.exception.ConflictException;
 import com.springproject.eventmanagementsystem.model.Role;
 import com.springproject.eventmanagementsystem.model.UserEntity;
 import com.springproject.eventmanagementsystem.repository.UserRepository;
@@ -18,9 +19,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class AuthServiceTests {
@@ -74,5 +75,22 @@ public class AuthServiceTests {
         assertEquals("rahul.attendee@gmail.com", capturedUser.getEmail());
         assertEquals("encodedPassword", capturedUser.getPassword());
         assertEquals(Role.ATTENDEE, capturedUser.getRole());
+    }
+
+    @Test
+    void shouldThrowConflictException_WhenUserWithSameEmailAlreadyExists() {
+        AuthRegistrationRequest request =
+                new AuthRegistrationRequest("Rahul", "rahul.attendee@gmail.com", "Test@123");
+        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(new UserEntity()));
+
+        ConflictException exception = assertThrows(
+                ConflictException.class,
+                () -> authService.registerUser(request)
+        );
+
+        assertEquals("CONFLICT_ERROR", exception.getCode());
+        assertEquals("User with email:" + request.getEmail() + " already exists", exception.getMessage());
+        verify(userRepository, never()).save(any(UserEntity.class));
+
     }
 }
