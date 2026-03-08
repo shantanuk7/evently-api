@@ -1,22 +1,24 @@
 package com.springproject.eventmanagementsystem.service;
 
+import com.springproject.eventmanagementsystem.dto.AuthLoginRequest;
+import com.springproject.eventmanagementsystem.dto.AuthLoginResponse;
 import com.springproject.eventmanagementsystem.dto.AuthRegistrationRequest;
 import com.springproject.eventmanagementsystem.dto.AuthRegistrationResponse;
 import com.springproject.eventmanagementsystem.exception.ConflictException;
 import com.springproject.eventmanagementsystem.model.Role;
 import com.springproject.eventmanagementsystem.model.UserEntity;
 import com.springproject.eventmanagementsystem.repository.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -34,6 +36,12 @@ public class AuthServiceTests {
 
     @InjectMocks
     private AuthService authService;
+
+    @Mock
+    private JwtService jwtService;
+
+    @Mock
+    AuthenticationManager authenticationManager;
 
     @Test
     void shouldSaveCorrectUserDetails_WhenNewUserIsRegistered() {
@@ -83,5 +91,32 @@ public class AuthServiceTests {
         assertEquals("User with email:" + request.getEmail() + " already exists", exception.getMessage());
         verify(userRepository, never()).save(any(UserEntity.class));
 
+    }
+
+    @Test
+    void shouldLoginSuccessfully_AndReturnToken_WhenUserSubmitsValidCredentials() {
+        // Given
+        UserEntity user = new UserEntity();
+        user.setId(1L);
+        user.setEmail("rahul.attendee@gmail.com");
+        user.setPassword("Test@123");
+        user.setRole(Role.ATTENDEE);
+
+        AuthLoginRequest request = new AuthLoginRequest(user.getEmail(), user.getPassword());
+
+        when(userRepository.findByEmail(eq(request.getEmail()))).thenReturn(Optional.of(user));
+        when(jwtService.generateToken(user)).thenReturn("token");
+
+        // When
+        AuthLoginResponse response = authService.login(request);
+
+        // Then
+        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(userRepository).findByEmail(eq(request.getEmail()));
+        verify(jwtService).generateToken(eq(user));
+        assertEquals("token", response.getToken());
+        assertEquals(user.getId(), response.getUserId());
+        assertEquals(Role.ATTENDEE, response.getRole());
+        assertEquals(request.getEmail(), response.getEmail());
     }
 }
