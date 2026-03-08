@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleMissingRequestHeaderException(MissingRequestHeaderException ex) {
         String errorMessage = "Missing required request header: " + ex.getHeaderName();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse("MISSING_USER_ID", errorMessage));
+                .body(new ErrorResponse("MISSING_REQUEST_HEADER", errorMessage));
     }
 
     @ExceptionHandler(BadCredentialsException.class)
